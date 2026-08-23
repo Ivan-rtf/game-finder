@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Підбір гри за твоїми вподобаннями</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Plus+Jakarta+Sans:wght@400;500;700&display=swap');
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #0f172a;
+            color: #f8fafc;
+        }
+        .gaming-font {
+            font-family: 'Orbitron', sans-serif;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950">
+
+    <!-- Header -->
+    <header class="w-full py-6 px-8 border-b border-slate-800 flex justify-between items-center backdrop-blur-md bg-slate-900/50">
+        <h1 class="gaming-font text-xl md:text-2xl font-bold tracking-wider text-indigo-400">GAMEFINDER.UA</h1>
+        <div id="progress-indicator" class="text-sm text-slate-400 hidden">Питання <span id="current-q">1</span> з <span id="total-q">5</span></div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="flex-grow flex items-center justify-center p-4">
+        <div class="max-w-xl w-full bg-slate-900/80 border border-slate-800 rounded-2xl p-6 md:p-8 shadow-2xl backdrop-blur-xl">
+            
+            <!-- Welcome Screen -->
+            <div id="welcome-screen" class="text-center">
+                <div class="inline-block p-4 bg-indigo-600/10 rounded-2xl border border-indigo-500/20 mb-6">
+                    <svg class="w-16 h-16 text-indigo-400 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+                <h2 class="gaming-font text-2xl md:text-3xl font-bold mb-4 text-white">Знайди свою ідеальну гру!</h2>
+                <p class="text-slate-400 mb-8 leading-relaxed">Пройди короткий інтерактивний тест, який проаналізує твої уподобання та підбере гру, яка сподобається на всі 100%.</p>
+                <button onclick="startQuiz()" class="w-full py-4 bg-indigo-600 hover:bg-indigo-500 font-bold rounded-xl transition duration-300 shadow-lg shadow-indigo-600/30 gaming-font tracking-wide">
+                    ПОЧАТИ ТЕСТ
+                </button>
+            </div>
+
+            <!-- Quiz Screen -->
+            <div id="quiz-screen" class="hidden">
+                <div class="mb-6">
+                    <div class="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
+                        <div id="progress-bar" class="bg-indigo-500 h-full transition-all duration-300" style="width: 20%"></div>
+                    </div>
+                </div>
+                <h3 id="question-text" class="text-lg md:text-xl font-bold mb-6 text-slate-100"></h3>
+                <div id="options-container" class="space-y-3">
+                    <!-- Options will be injected here -->
+                </div>
+            </div>
+
+            <!-- Result Screen -->
+            <div id="result-screen" class="hidden text-center">
+                <span class="text-xs uppercase tracking-widest text-indigo-400 gaming-font block mb-2">Твоя ідеальна гра</span>
+                <h2 id="result-title" class="gaming-font text-2xl md:text-4xl font-extrabold text-white mb-4"></h2>
+                <div id="result-badge" class="inline-block px-4 py-1.5 bg-indigo-500/10 border border-indigo-500/30 rounded-full text-indigo-300 text-sm mb-6"></div>
+                <p id="result-desc" class="text-slate-300 mb-8 leading-relaxed bg-slate-800/50 p-4 rounded-xl border border-slate-700/50"></p>
+                <div class="flex gap-4">
+                    <button onclick="resetQuiz()" class="flex-1 py-3 bg-slate-800 hover:bg-slate-700 font-bold rounded-xl transition duration-300 text-slate-200">
+                        Пройти знову
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="w-full py-4 text-center text-xs text-slate-500 border-t border-slate-800/60">
+        GameFinder Interactive Quiz &copy; 2026
+    </footer>
+
+    <script>
+        const questions = [
+            {
+                question: "Який темп геймплею та стиль гри тобі найбільше до душі?",
+                options: [
+                    { text: "Розслаблений, неспішний, з акцентом на атмосферу чи творчість", type: "cozy" },
+                    { text: "Динамічний екшен, де вирішує швидкість реакції та влучність", type: "action" },
+                    { text: "Глибокий сюжет, де кожен вибір впливає на історію та персонажів", type: "rpg" },
+                    { text: "Тактичний та стратегічний розвиток, планування наперед", type: "strategy" }
+                ]
+            },
+            {
+                question: "Як ти зазвичай ставишся до складності у відеоіграх?",
+                options: [
+                    { text: "Хочу відпочити після роботи/навчання без зайвих нервів (легко)", type: "cozy" },
+                    { text: "Люблю чесні виклики та драйвові битви середньої складності", type: "action" },
+                    { text: "Обожнюю випробування, складних босів та долання перешкод (хардкор)", type: "rpg" },
+                    { text: "Мені важлива складна логіка, економія ресурсів та менеджмент", type: "strategy" }
+                ]
+            },
+            {
+                question: "Яке ігрове середовище (setting) тобі ближче?",
+                options: [
+                    { text: "Затишне сільце, природа або ферма", type: "cozy" },
+                    { text: "Сучасний мілітарі-конфлікт, футуристичний бойовик", type: "action" },
+                    { text: "Величне фентезі з магією, драконами та міфами", type: "rpg" },
+                    { text: "Історичні епохи, глобальна мапа або будівництво міст майбутнього", type: "strategy" }
+                ]
+            },
+            {
+                question: "Що для тебе є головною мотивацією грати?",
+                options: [
+                    { text: "Створити щось унікальне або розслабитися за улюбленою справою", type: "cozy" },
+                    { text: "Викинути адреналін та змагатися з іншими чи натовпами ворогів", type: "action" },
+                    { text: "Прожити емоційну історію, відчути себе героєм епічної саги", type: "rpg" },
+                    { text: "Переграти систему завдяки розумному плануванню та економіці", type: "strategy" }
+                ]
+            },
+            {
+                question: "Скільки часу ти зазвичай готовий приділяти одній сесії?",
+                options: [
+                    { text: "15-30 хвилин, щоб просто переключити увагу", type: "cozy" },
+                    { text: "1-2 години на динамічні матчі чи забіги", type: "action" },
+                    { text: "Години поспіль, досліджуючи величезний відкритий світ", type: "rpg" },
+                    { text: "Довгі сесії з глибоким зануренням у таблиці та розвиток бази", type: "strategy" }
+                ]
+            }
+        ];
+
+        const results = {
+            cozy: {
+                title: "Stardew Valley",
+                badge: "Затишний симулятор ферми / Життя",
+                desc: "Твій ідеальний вибір — Stardew Valley! Тут ти зможеш закинути міське життя, отримати у спадок дідусеву ферму, вирощувати культури, розводити тварин, заводити друзів серед мешканців містечка та досліджувати печери у власному темпі."
+            },
+            action: {
+                title: "Cyberpunk 2077",
+                badge: "Динамічний екшен / Кіберпанк",
+                desc: "Тобі підійде Cyberpunk 2077! На тебе чекають видовищні перестрілки, футуристичний світ Найт-Сіті, стиль, швидкість та адреналін у кожній місії."
+            },
+            rpg: {
+                title: "The Witcher 3: Wild Hunt",
+                badge: "Епічна RPG / Відкритий світ",
+                desc: "Твій мастхев — Відьмак 3: Дикий Гін! Неймовірна історія, глибокі персонажі, моральні дилеми та захопливий фентезійний світ, у якому кожна побічна квестова гілка якісніша за основні сюжети інших ігор."
+            },
+            strategy: {
+                title: "Civilization VI",
+                badge: "Покрокова стратегія / Глобальна",
+                desc: "Твоя гра — Sid Meier's Civilization VI! Веди свою цивілізацію від кам'яного віку до космічної ери, плануй міста, укладай союзи або підкорюй світ дипломатією чи наукою."
+            }
+        };
+
+        let currentQuestion = 0;
+        let scores = { cozy: 0, action: 0, rpg: 0, strategy: 0 };
+
+        function startQuiz() {
+            document.getElementById('welcome-screen').classList.add('hidden');
+            document.getElementById('quiz-screen').classList.remove('hidden');
+            document.getElementById('progress-indicator').classList.remove('hidden');
+            currentQuestion = 0;
+            scores = { cozy: 0, action: 0, rpg: 0, strategy: 0 };
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            const q = questions[currentQuestion];
+            document.getElementById('question-text').innerText = q.question;
+            document.getElementById('current-q').innerText = currentQuestion + 1;
+            document.getElementById('total-q').innerText = questions.length;
+            
+            const progressPercent = ((currentQuestion + 1) / questions.length) * 100;
+            document.getElementById('progress-bar').style.width = `${progressPercent}%`;
+
+            const optionsContainer = document.getElementById('options-container');
+            optionsContainer.innerHTML = '';
+
+            q.options.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = 'w-full text-left p-4 bg-slate-800/70 hover:bg-indigo-600/20 border border-slate-700/60 hover:border-indigo-500/50 rounded-xl transition duration-200 text-slate-200 hover:text-white font-medium text-sm md:text-base';
+                btn.innerText = opt.text;
+                btn.onclick = () => selectOption(opt.type);
+                optionsContainer.appendChild(btn);
+            });
+        }
+
+        function selectOption(type) {
+            scores[type]++;
+            currentQuestion++;
+
+            if (currentQuestion < questions.length) {
+                loadQuestion();
+            } else {
+                showResult();
+            }
+        }
+
+        function showResult() {
+            document.getElementById('quiz-screen').classList.add('hidden');
+            document.getElementById('progress-indicator').classList.add('hidden');
+            document.getElementById('result-screen').classList.remove('hidden');
+
+            let bestCategory = 'cozy';
+            let maxScore = -1;
+            for (let cat in scores) {
+                if (scores[cat] > maxScore) {
+                    maxScore = scores[cat];
+                    bestCategory = cat;
+                }
+            }
+
+            const res = results[bestCategory];
+            document.getElementById('result-title').innerText = res.title;
+            document.getElementById('result-badge').innerText = res.badge;
+            document.getElementById('result-desc').innerText = res.desc;
+        }
+
+        function resetQuiz() {
+            document.getElementById('result-screen').classList.add('hidden');
+            document.getElementById('welcome-screen').classList.remove('hidden');
+        }
+    </script>
+</body>
+</html>
